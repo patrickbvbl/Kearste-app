@@ -106,6 +106,14 @@
     cursor: pointer;
     font-size: 1em;
     margin-top: 8px;
+    transition: background 0.2s, opacity 0.2s;
+    opacity: 0.5;
+  }
+  button.primary:hover {
+    background: #6b9bd1;
+  }
+  button.primary.ready {
+    opacity: 1;
   }
   .history-item {
     border-bottom: 1px solid #eee;
@@ -216,6 +224,55 @@
     transition: transform 0.15s;
   }
   .fidget:active { transform: scale(0.85) rotate(45deg); }
+
+  /* House toggle */
+  .house {
+    width: 100px;
+    margin: 30px auto;
+    cursor: pointer;
+  }
+  .house-roof {
+    width: 0;
+    height: 0;
+    margin: 0 auto;
+    border-left: 55px solid transparent;
+    border-right: 55px solid transparent;
+    border-bottom: 40px solid #8a8a8a;
+    transition: border-bottom-color 0.3s;
+  }
+  .house-body {
+    width: 90px;
+    height: 70px;
+    margin: 0 auto;
+    background: #cfcfcf;
+    position: relative;
+    transition: background 0.3s;
+  }
+  .house-window {
+    width: 22px;
+    height: 22px;
+    background: #9a9a9a;
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    transition: background 0.3s, box-shadow 0.3s;
+  }
+  .house-door {
+    width: 22px;
+    height: 36px;
+    background: #9a9a9a;
+    position: absolute;
+    bottom: 0;
+    left: 14px;
+    transition: background 0.3s;
+  }
+  .house.on .house-roof { border-bottom-color: #e0a85a; }
+  .house.on .house-body { background: #f5e3a1; }
+  .house.on .house-window {
+    background: #fff4c2;
+    box-shadow: 0 0 20px 6px #ffe98a;
+  }
+  .house.on .house-door { background: #d9b970; }
   .back-btn {
     background: none;
     border: none;
@@ -243,7 +300,7 @@
       <button data-mood="😣">😣</button>
     </div>
     <textarea id="moodNote" placeholder="Vil du skrive noget om hvad der påvirker dig? (valgfrit)"></textarea>
-    <button class="primary" onclick="saveMood()">Gem</button>
+    <button class="primary" id="saveMoodBtn" onclick="saveMood()">Gem</button>
   </div>
   <div class="card">
     <h2>Historik</h2>
@@ -327,6 +384,15 @@
     <button class="back-btn" onclick="backToCalm()">← Tilbage</button>
     <div class="breathe-text">Tryk og hold på cirklen</div>
     <div class="fidget"></div>
+
+    <div class="breathe-text" style="margin-top:30px;">Tænd / sluk huset</div>
+    <div class="house" id="houseToggle" onclick="toggleHouse()">
+      <div class="house-roof"></div>
+      <div class="house-body">
+        <div class="house-window"></div>
+        <div class="house-door"></div>
+      </div>
+    </div>
   </div>
 
   <div id="calmSounds" class="hidden">
@@ -346,7 +412,7 @@
 <!-- NAV -->
 <nav>
   <button class="active" onclick="switchTab('mood')"><span class="icon">😊</span>Humør</button>
-  <button onclick="switchTab('pause')"><span class="icon">🛑</span>Pause</button>
+  <button onclick="switchTab('pause')"><span class="icon">🛑</span>Følelser</button>
   <button onclick="switchTab('scripts')"><span class="icon">💬</span>Sætninger</button>
   <button onclick="switchTab('calm')"><span class="icon">🌈</span>Ro</button>
 </nav>
@@ -367,6 +433,7 @@ document.querySelectorAll('#moodOptions button').forEach(btn => {
     document.querySelectorAll('#moodOptions button').forEach(b => b.classList.remove('selected'));
     btn.classList.add('selected');
     selectedMood = btn.dataset.mood;
+    document.getElementById('saveMoodBtn').classList.add('ready');
   });
 });
 
@@ -390,6 +457,7 @@ function saveMood() {
 
   document.getElementById('moodNote').value = '';
   document.querySelectorAll('#moodOptions button').forEach(b => b.classList.remove('selected'));
+  document.getElementById('saveMoodBtn').classList.remove('ready');
   selectedMood = null;
   renderMoodHistory();
 }
@@ -504,6 +572,10 @@ function showCalm(name) {
   if (name === 'colors') {
     cycleColors();
   }
+}
+
+function toggleHouse() {
+  document.getElementById('houseToggle').classList.toggle('on');
 }
 
 function backToCalm() {
