@@ -314,6 +314,7 @@
     <button class="pause-btn" onclick="sendSignal('pause')">🛑 Jeg har brug for en pause</button>
     <button class="pause-btn" style="background: var(--ok);" onclick="sendSignal('irritated')">😤 Jeg er irriteret</button>
     <button class="pause-btn" style="background: var(--bad);" onclick="sendSignal('lost')">❓ Jeg ved ikke hvad jeg skal gøre</button>
+    <button class="pause-btn" style="background: var(--soft);" onclick="sendSignal('longday')">😴 Lang dag</button>
     <p id="pauseMsg" style="text-align:center; color:#999;"></p>
   </div>
   <div class="card">
@@ -491,7 +492,8 @@ const NTFY_TOPIC = 'pusling-7k2x'; // skift til jeres eget unikke navn
 const SIGNALS = {
   pause: { body: '🛑 Hun har brug for en pause lige nu.', title: 'Pause-signal', confirm: '💙 Signal sendt - tag dig den tid du har brug for.' },
   irritated: { body: '😤 Hun er irriteret lige nu.', title: 'Irritations-signal', confirm: '💛 Signal sendt.' },
-  lost: { body: '❓ Hun ved ikke hvad hun skal gøre lige nu.', title: 'Hjælp-signal', confirm: '💜 Signal sendt.' }
+  lost: { body: '❓ Hun ved ikke hvad hun skal gøre lige nu.', title: 'Hjælp-signal', confirm: '💜 Signal sendt.' },
+  longday: { body: '😴 Hun har haft en lang dag.', title: 'Lang dag-signal', confirm: '💤 Signal sendt.' }
 };
 
 function sendSignal(type) {
