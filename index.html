@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Min Dag</title>
+<style>
+  :root {
+    --bg: #fdf6f0;
+    --accent: #a8c8d8;
+    --soft: #f0e6f6;
+    --text: #4a4a4a;
+    --good: #b8d8b8;
+    --ok: #f5e3a1;
+    --bad: #f0b8b8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: var(--bg);
+    margin: 0;
+    color: var(--text);
+    padding-bottom: 70px;
+  }
+  header {
+    text-align: center;
+    padding: 20px;
+    font-size: 1.4em;
+    font-weight: 600;
+  }
+  .tab-content {
+    display: none;
+    padding: 16px;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  .tab-content.active { display: block; }
+
+  /* Bottom nav */
+  nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    display: flex;
+    background: white;
+    border-top: 1px solid #eee;
+  }
+  nav button {
+    flex: 1;
+    border: none;
+    background: none;
+    padding: 12px 4px;
+    font-size: 0.85em;
+    color: var(--text);
+    cursor: pointer;
+  }
+  nav button.active {
+    color: #6b9bd1;
+    font-weight: bold;
+  }
+  nav button .icon { display: block; font-size: 1.4em; }
+
+  /* Cards */
+  .card {
+    background: white;
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  h2 { margin-top: 0; font-size: 1.1em; }
+
+  /* Mood tracker */
+  .mood-options {
+    display: flex;
+    justify-content: space-between;
+    margin: 12px 0;
+  }
+  .mood-options button {
+    font-size: 2em;
+    background: none;
+    border: 2px solid transparent;
+    border-radius: 50%;
+    cursor: pointer;
+    padding: 6px;
+    transition: 0.2s;
+  }
+  .mood-options button.selected {
+    border-color: var(--accent);
+    background: #4a4a4a;
+  }
+  textarea {
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    padding: 10px;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 60px;
+  }
+  button.primary {
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 16px;
+    cursor: pointer;
+    font-size: 1em;
+    margin-top: 8px;
+  }
+  .history-item {
+    border-bottom: 1px solid #eee;
+    padding: 8px 0;
+    font-size: 0.9em;
+  }
+  .history-item .date { color: #999; font-size: 0.8em; }
+
+  /* Sensory pause */
+  .pause-btn {
+    width: 100%;
+    background: var(--good);
+    border: none;
+    border-radius: 14px;
+    padding: 24px;
+    font-size: 1.2em;
+    cursor: pointer;
+    margin-bottom: 16px;
+  }
+  .timer-display {
+    text-align: center;
+    font-size: 3em;
+    font-weight: bold;
+    margin: 20px 0;
+  }
+  .timer-controls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .timer-controls button {
+    border: none;
+    border-radius: 10px;
+    padding: 10px 16px;
+    background: var(--soft);
+    cursor: pointer;
+  }
+
+  /* Social scripts */
+  .script-category {
+    margin-bottom: 14px;
+  }
+  .script-category h3 {
+    margin: 0 0 6px 0;
+    font-size: 1em;
+    color: #6b9bd1;
+  }
+  .script-item {
+    background: var(--soft);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    font-size: 0.95em;
+    cursor: pointer;
+    position: relative;
+  }
+  .script-item:active { background: var(--accent); }
+  .copy-hint {
+    font-size: 0.75em;
+    color: #999;
+    float: right;
+  }
+
+  /* Calming room */
+  .calm-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .calm-tile {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border: none;
+    font-size: 1em;
+  }
+  .calm-tile .emoji { font-size: 2.5em; display: block; margin-bottom: 6px; }
+
+  /* Breathing animation */
+  .breathe-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin: 30px auto;
+    animation: breathe 8s infinite ease-in-out;
+  }
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); opacity: 0.7; }
+    50% { transform: scale(1.6); opacity: 1; }
+  }
+  .breathe-text {
+    text-align: center;
+    font-size: 1.2em;
+    margin-bottom: 10px;
+  }
+  .fidget {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--soft));
+    margin: 30px auto;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .fidget:active { transform: scale(0.85) rotate(45deg); }
+  .back-btn {
+    background: none;
+    border: none;
+    color: #6b9bd1;
+    cursor: pointer;
+    font-size: 1em;
+    margin-bottom: 10px;
+  }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<header id="header">Hej skat ❤️</header>
+
+<!-- HUMØR TAB -->
+<div class="tab-content active" id="mood">
+  <div class="card">
+    <h2>Hvordan har du det lige nu?</h2>
+    <div class="mood-options" id="moodOptions">
+      <button data-mood="😄">😄</button>
+      <button data-mood="🙂">🙂</button>
+      <button data-mood="😐">😐</button>
+      <button data-mood="😟">😟</button>
+      <button data-mood="😣">😣</button>
+    </div>
+    <textarea id="moodNote" placeholder="Vil du skrive noget om hvad der påvirker dig? (valgfrit)"></textarea>
+    <button class="primary" onclick="saveMood()">Gem</button>
+  </div>
+  <div class="card">
+    <h2>Historik</h2>
+    <div id="moodHistory"></div>
+  </div>
+</div>
+
+<!-- PAUSE TAB -->
+<div class="tab-content" id="pause">
+  <div class="card">
+    <button class="pause-btn" onclick="sendSignal('pause')">🛑 Jeg har brug for en pause</button>
+    <button class="pause-btn" style="background: var(--ok);" onclick="sendSignal('irritated')">😤 Jeg er irriteret</button>
+    <button class="pause-btn" style="background: var(--bad);" onclick="sendSignal('lost')">❓ Jeg ved ikke hvad jeg skal gøre</button>
+    <p id="pauseMsg" style="text-align:center; color:#999;"></p>
+  </div>
+  <div class="card">
+    <h2>Pause-timer</h2>
+    <div class="timer-display" id="timerDisplay">05:00</div>
+    <div class="timer-controls">
+      <button onclick="setTimer(2)">2 min</button>
+      <button onclick="setTimer(5)">5 min</button>
+      <button onclick="setTimer(10)">10 min</button>
+      <button onclick="startTimer()">Start</button>
+      <button onclick="resetTimer()">Nulstil</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCRIPTS TAB -->
+<div class="tab-content" id="scripts">
+  <div class="card">
+    <h2>Sætninger til svære situationer</h2>
+    <p style="font-size:0.85em; color:#999;">Tryk på en sætning for at kopiere den.</p>
+
+    <div class="script-category">
+      <h3>Aflysning af planer</h3>
+      <div class="script-item" onclick="copyText(this)">Jeg har det ikke godt lige nu, og jeg har brug for at melde fra. Det handler ikke om dig.</div>
+      <div class="script-item" onclick="copyText(this)">Kan vi flytte det til en anden dag? Jeg har for meget på lige nu.</div>
+    </div>
+
+    <div class="script-category">
+      <h3>Behov for ro</h3>
+      <div class="script-item" onclick="copyText(this)">Jeg har brug for at være alene lidt for at lade op. Jeg elsker dig stadig.</div>
+      <div class="script-item" onclick="copyText(this)">Kan vi tale lavere/skrue ned? Det er meget lige nu.</div>
+    </div>
+
+    <div class="script-category">
+      <h3>Telefonopkald / nye mennesker</h3>
+      <div class="script-item" onclick="copyText(this)">Kan vi skrive sammen i stedet for at ringe?</div>
+      <div class="script-item" onclick="copyText(this)">Det er rart at møde dig. Jeg er lidt stille i starten, men det betyder ikke noget negativt.</div>
+    </div>
+
+    <div class="script-category">
+      <h3>Når jeg er overbelastet</h3>
+      <div class="script-item" onclick="copyText(this)">Jeg er overbelastet lige nu. Jeg har brug for et øjebliks pause uden spørgsmål.</div>
+      <div class="script-item" onclick="copyText(this)">Det er ikke dig - mit hoved har bare brug for stille i 10 minutter.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- RO TAB -->
+<div class="tab-content" id="calm">
+  <div id="calmMenu">
+    <h2 style="text-align:center;">Beroligende rum</h2>
+    <div class="calm-grid">
+      <button class="calm-tile" onclick="showCalm('breathing')"><span class="emoji">🌬️</span>Vejrtrækning</button>
+      <button class="calm-tile" onclick="showCalm('fidget')"><span class="emoji">🔵</span>Fidget</button>
+      <button class="calm-tile" onclick="showCalm('sounds')"><span class="emoji">🎵</span>Lyde</button>
+      <button class="calm-tile" onclick="showCalm('colors')"><span class="emoji">🌈</span>Farver</button>
+    </div>
+  </div>
+
+  <div id="calmBreathing" class="hidden">
+    <button class="back-btn" onclick="backToCalm()">← Tilbage</button>
+    <div class="breathe-text">Følg cirklen: ind ... og ud ...</div>
+    <div class="breathe-circle"></div>
+  </div>
+
+  <div id="calmFidget" class="hidden">
+    <button class="back-btn" onclick="backToCalm()">← Tilbage</button>
+    <div class="breathe-text">Tryk og hold på cirklen</div>
+    <div class="fidget"></div>
+  </div>
+
+  <div id="calmSounds" class="hidden">
+    <button class="back-btn" onclick="backToCalm()">← Tilbage</button>
+    <div class="card">
+      <p style="text-align:center;">🌧️ 🌊 🔥 🐦</p>
+      <p style="text-align:center; color:#999; font-size:0.85em;">(Lydfiler kan tilføjes senere - placeholder for nu)</p>
+    </div>
+  </div>
+
+  <div id="calmColors" class="hidden">
+    <button class="back-btn" onclick="backToCalm()">← Tilbage</button>
+    <div id="colorBox" style="height:300px; border-radius:16px; transition: background 4s; background: var(--good);"></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <button class="active" onclick="switchTab('mood')"><span class="icon">😊</span>Humør</button>
+  <button onclick="switchTab('pause')"><span class="icon">🛑</span>Pause</button>
+  <button onclick="switchTab('scripts')"><span class="icon">💬</span>Sætninger</button>
+  <button onclick="switchTab('calm')"><span class="icon">🌈</span>Ro</button>
+</nav>
+
+<script>
+// ---- TAB SWITCHING ----
+function switchTab(id) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+}
+
+// ---- MOOD TRACKER ----
+let selectedMood = null;
+document.querySelectorAll('#moodOptions button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#moodOptions button').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedMood = btn.dataset.mood;
+  });
+});
+
+function saveMood() {
+  if (!selectedMood) { alert('Vælg et humør først 🙂'); return; }
+  const note = document.getElementById('moodNote').value;
+  const entry = {
+    mood: selectedMood,
+    note: note,
+    date: new Date().toLocaleString('da-DK')
+  };
+  const history = JSON.parse(localStorage.getItem('moodHistory') || '[]');
+  history.unshift(entry);
+  localStorage.setItem('moodHistory', JSON.stringify(history.slice(0, 50)));
+
+  fetch('https://ntfy.sh/' + NTFY_TOPIC, {
+    method: 'POST',
+    body: entry.mood + (entry.note ? ' - ' + entry.note : ''),
+    headers: { 'Title': 'Humør-registrering' }
+  }).catch(() => {});
+
+  document.getElementById('moodNote').value = '';
+  document.querySelectorAll('#moodOptions button').forEach(b => b.classList.remove('selected'));
+  selectedMood = null;
+  renderMoodHistory();
+}
+
+function renderMoodHistory() {
+  const history = JSON.parse(localStorage.getItem('moodHistory') || '[]');
+  const container = document.getElementById('moodHistory');
+  if (history.length === 0) {
+    container.innerHTML = '<p style="color:#999;">Ingen registreringer endnu.</p>';
+    return;
+  }
+  container.innerHTML = history.map(h => `
+    <div class="history-item">
+      <span style="font-size:1.3em;">${h.mood}</span> ${h.note ? '- ' + escapeHtml(h.note) : ''}
+      <div class="date">${h.date}</div>
+    </div>
+  `).join('');
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+renderMoodHistory();
+
+// ---- PAUSE / SENSORY ----
+const NTFY_TOPIC = 'pusling-7k2x'; // skift til jeres eget unikke navn
+
+const SIGNALS = {
+  pause: { body: '🛑 Hun har brug for en pause lige nu.', title: 'Pause-signal', confirm: '💙 Signal sendt - tag dig den tid du har brug for.' },
+  irritated: { body: '😤 Hun er irriteret lige nu.', title: 'Irritations-signal', confirm: '💛 Signal sendt.' },
+  lost: { body: '❓ Hun ved ikke hvad hun skal gøre lige nu.', title: 'Hjælp-signal', confirm: '💜 Signal sendt.' }
+};
+
+function sendSignal(type) {
+  const msg = document.getElementById('pauseMsg');
+  const s = SIGNALS[type];
+
+  fetch('https://ntfy.sh/' + NTFY_TOPIC, {
+    method: 'POST',
+    body: s.body,
+    headers: { 'Title': s.title }
+  }).then(() => {
+    msg.textContent = s.confirm;
+  }).catch(() => {
+    msg.textContent = '⚠️ Kunne ikke sende signal (ingen internetforbindelse?).';
+  });
+
+  const log = JSON.parse(localStorage.getItem('pauseLog') || '[]');
+  log.unshift(type + ' - ' + new Date().toLocaleString('da-DK'));
+  localStorage.setItem('pauseLog', JSON.stringify(log.slice(0, 20)));
+}
+
+let timerInterval = null;
+let timeLeft = 300;
+
+function setTimer(minutes) {
+  clearInterval(timerInterval);
+  timerInterval = null;
+  timeLeft = minutes * 60;
+  updateTimerDisplay();
+}
+
+function startTimer() {
+  if (timerInterval) return;
+  timerInterval = setInterval(() => {
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      document.getElementById('timerDisplay').textContent = '✅ Færdig';
+      return;
+    }
+    timeLeft--;
+    updateTimerDisplay();
+  }, 1000);
+}
+
+function resetTimer() {
+  clearInterval(timerInterval);
+  timerInterval = null;
+  timeLeft = 300;
+  updateTimerDisplay();
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+  const s = (timeLeft % 60).toString().padStart(2, '0');
+  document.getElementById('timerDisplay').textContent = `${m}:${s}`;
+}
+updateTimerDisplay();
+
+// ---- SOCIAL SCRIPTS ----
+function copyText(el) {
+  const text = el.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const original = el.style.background;
+    el.style.background = '#cfe8cf';
+    setTimeout(() => { el.style.background = ''; }, 400);
+  }).catch(() => {});
+}
+
+// ---- CALMING ROOM ----
+function showCalm(name) {
+  document.getElementById('calmMenu').classList.add('hidden');
+  ['breathing','fidget','sounds','colors'].forEach(n => {
+    document.getElementById('calm' + n.charAt(0).toUpperCase() + n.slice(1)).classList.add('hidden');
+  });
+  document.getElementById('calm' + name.charAt(0).toUpperCase() + name.slice(1)).classList.remove('hidden');
+
+  if (name === 'colors') {
+    cycleColors();
+  }
+}
+
+function backToCalm() {
+  ['breathing','fidget','sounds','colors'].forEach(n => {
+    document.getElementById('calm' + n.charAt(0).toUpperCase() + n.slice(1)).classList.add('hidden');
+  });
+  document.getElementById('calmMenu').classList.remove('hidden');
+}
+
+let colorInterval = null;
+function cycleColors() {
+  const colors = ['#b8d8b8', '#a8c8d8', '#f0e6f6', '#f5e3a1', '#f0b8b8'];
+  let i = 0;
+  const box = document.getElementById('colorBox');
+  if (colorInterval) clearInterval(colorInterval);
+  colorInterval = setInterval(() => {
+    i = (i + 1) % colors.length;
+    box.style.background = colors[i];
+  }, 4000);
+}
+</script>
+
+</body>
+</html>
